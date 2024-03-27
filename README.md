@@ -1,6 +1,6 @@
 This app is a video-sharing app very similar to YouTube called Jimtube, using React Node.js/Express, and MongoDB/Firebase. In this app, you can create an account, upload videos, leave likes and comments for videos, subscribe to other users and more.
 Once you first open the app you will be greeted with the Home screen displaying all the popular videos right now. If you look at the nav bar on the top you will notice tags for these videos you can use to filter to your preferences, and if you hover over these videos you
-will see a short 10-second preview of the video.
+will see a short 10-second preview of the video. 
 
 ![YT demo hover](https://github.com/jdemar5/video-app-react/assets/60453324/a44d2c20-ee3f-47d9-a801-b3572ce10ac2)
 
