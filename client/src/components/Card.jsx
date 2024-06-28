@@ -167,7 +167,7 @@ position: relative;
     display: flex;
     flex-direction: column;
   }
-`;
+`;   
 
 const Item = styled.div`
   display: flex;
