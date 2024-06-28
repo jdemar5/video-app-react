@@ -17,7 +17,7 @@ import ReactPlayer from "react-player/lazy";
 const Image = styled.img`
   border-radius: 1vh;
   width: 100%;
-  height: auto;
+  aspect-ratio: 33/18.6;
   background-color: #999;
   flex: 1;
   float: left;
@@ -43,6 +43,9 @@ const VidDiv = styled.div`
   width: 40%;
   gap: 5px;
   padding-bottom: 13px;
+  &.true {
+    display: block;
+  }
 `;
 
 const ImgDiv = styled.div`
@@ -50,6 +53,9 @@ const ImgDiv = styled.div`
   float: left;
   width: 40%;
   gap: 5px;
+  &.true {
+    display: none;
+  }
 `;
 
 const Container = styled.div`
@@ -58,32 +64,20 @@ const Container = styled.div`
   width: 100%;
   gap: 5px;
   margin-left: 8px;
-  &:hover ${ImgDiv} {
-    display: none;
-  }
+
   &:hover ${Duration} {
     visibility: hidden;
-  }
-  &:hover ${VidDiv} {
-    display: block;
+    transition-delay: 250ms;
   }
 `;
 
 const Details = styled.div`
   display: flex;
   position: relative;
-  padding-left: 5px;
+  padding-left: 10px;
   top: 10px;
   gap: 12px;
   flex: 1;
-`;
-
-const ChannelImage = styled.img`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #999;
-  display: ${(props) => props.type === "sm" && "none"};
 `;
 
 const Texts = styled.div``;
@@ -110,6 +104,7 @@ const Dots = styled.div`
   float: right;
   position: relative;
   bottom: 50px;
+  right: 15px;
   color: ${({ theme }) => theme.text};
 `;
 
@@ -192,7 +187,7 @@ const DropDownLi = styled.li`
   }
 `;
 
-const Item = styled.a`
+const Item = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
@@ -221,7 +216,7 @@ const LongCard = ({ type, video }) => {
   const [channel, setChannel] = useState({});
   const [openD, setOpenD] = useState(false);
   const [openS, setOpenS] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [over, setOver] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
   const [mousePos, setMousePos] = useState({});
   const [mouseSave, setMouseSave] = useState({});
@@ -312,43 +307,54 @@ const LongCard = ({ type, video }) => {
   }, [path]);
 
   const onMouseOverCaptureHandler = () => {
-    setPlaying(true);
-};
+    let handle = 0;
+    handle = setTimeout(() => {
+      setOver(true);
+    }, 500);
+    document.getElementById(`container${video._id}`).onmouseout = function () {
+      clearTimeout(handle);
+    };
+  };
 
-const onMouseOutCaptureHandler = () => {
-  setPlaying(false);
-};
+  const onMouseOutCaptureHandler = () => {
+    setTimeout(() => {
+      setOver(false);
+    }, 500);
+  };
 
-const handleStart = () => {
-  setTimeout(() => {
-    videoPlayerRef.current?.seekTo(0);
-    handleStart();
-    }, 10000)
-}
+  const handleStart = () => {
+    setTimeout(() => {
+      videoPlayerRef.current?.seekTo(0);
+      handleStart();
+    }, 10000);
+  };
 
   return (
     <>
-      <Container onMouseOverCapture={onMouseOverCaptureHandler} onMouseOutCapture={onMouseOutCaptureHandler} type={type}>
+      <Container
+        id={`container${video._id}`}
+        onMouseOverCapture={onMouseOverCaptureHandler}
+        onMouseOutCapture={onMouseOutCaptureHandler}
+      >
         <Link to={`/video/${video._id}`} style={{ textDecoration: "none" }}>
-        <VidDiv>
-        <ReactPlayer
+          <VidDiv className={over}>
+            <ReactPlayer
               ref={videoPlayerRef}
               url={video.videoUrl}
               width="100%"
               height="70%"
               muted
-              style={{position: "relative"}}
-              playing={playing}
+              style={{ position: "relative" }}
+              playing={over}
               onStart={handleStart}
               loop
             />
-            </VidDiv>
-          <ImgDiv>
+          </VidDiv>
+          <ImgDiv className={over}>
             <Image type={type} src={video.imgUrl} />
             <Duration>{video.duration}</Duration>
           </ImgDiv>
           <Details type={type}>
-            <ChannelImage type={type} src={channel.img} />
             <Texts>
               <Title>{video.title}</Title>
               <ChannelName>{channel.name}</ChannelName>
@@ -379,12 +385,15 @@ const handleStart = () => {
               </>
             ) : (
               <>
-              <Link to="../../signin" style={{ textDecoration: "none", color: "inherit" }}>
-              <Item>
-                  <SheduleOutlined />
-                  <TitleDD>Save to Watch later</TitleDD>
-                  <CheckIcon style={{ display: checkView }} />
-                </Item>
+                <Link
+                  to="../../signin"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <Item>
+                    <SheduleOutlined />
+                    <TitleDD>Save to Watch later</TitleDD>
+                    <CheckIcon style={{ display: checkView }} />
+                  </Item>
                 </Link>
               </>
             )}

@@ -14,13 +14,12 @@ import Settings from "./pages/Settings";
 
 const Container = styled.div`
   display: flex;
-  
 `;
 
 const Main = styled.div`
   flex: 7;
   background-color: ${({ theme }) => theme.bg};
-  
+
   &::-webkit-scrollbar {
     width: 8px;
     background: transparent;
@@ -36,28 +35,46 @@ const Wrapper = styled.div`
 
 function App() {
   const [darkMode, setDarkMode] = useState(true);
+  const [style, setStyle] = useState("open");
   const { currentUser } = useSelector((state) => state.user);
- 
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <Container>
         <BrowserRouter>
-          <Menu darkMode={darkMode} setDarkMode={setDarkMode} />
+          <Menu
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            style={style}
+            setStyle={setStyle}
+          />
           <Main>
             <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
             <Wrapper>
               <Routes>
                 <Route path="/">
-                  <Route index element={<Home type="random" />} />
-                  <Route path="trends" element={<Home type="trend" />} />
+                  <Route index element={<Home type="random" style={style} />} />
+                  <Route
+                    path="trends"
+                    element={<Home type="trend" style={style} />}
+                  />
                   <Route
                     path="subscriptions"
-                    element={currentUser ? <Home type="sub" /> : <Home type="random"/>}/>
+                    element={
+                      currentUser ? (
+                        <Home type="sub" />
+                      ) : (
+                        <Home type="random" style={style} />
+                      )
+                    }
+                  />
                   <Route path="likes" element={<Home type="likes" />} />
                   <Route path="library" element={<Home type="library" />} />
                   <Route path="history" element={<Home type="history" />} />
-                  <Route path="watchLater" element={<Home type="watchLater" />} />
+                  <Route
+                    path="watchLater"
+                    element={<Home type="watchLater" />}
+                  />
                   <Route path="Music" element={<Home type="Music" />} />
                   <Route path="Sports" element={<Home type="Sports" />} />
                   <Route path="Gaming" element={<Home type="Gaming" />} />
@@ -68,7 +85,7 @@ function App() {
                   <Route path="signin" element={<SignIn />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="video">
-                    <Route path=":id" element={<Video />} />
+                    <Route path=":id" element={<Video style={style} />} />
                   </Route>
                   <Route path="channel">
                     <Route path=":id" element={<Channel />} />

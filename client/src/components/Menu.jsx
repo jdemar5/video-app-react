@@ -19,7 +19,7 @@ import SettingsBrightnessOutlinedIcon from "@mui/icons-material/SettingsBrightne
 import SheduleOutlined from "@mui/icons-material/ScheduleOutlined";
 import PlayCircleOutlined from "@mui/icons-material/PlayCircleOutlined";
 import MenuOutlined from "@mui/icons-material/MenuOutlined";
-import LocalPizzaIcon from '@mui/icons-material/LocalPizza';
+import LocalPizzaIcon from "@mui/icons-material/LocalPizza";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -268,9 +268,8 @@ const ChannelImage = styled.img`
   display: ${(props) => props.type === "sm" && "none"};
 `;
 
-const Menu = ({ darkMode, setDarkMode }) => {
+const Menu = ({ darkMode, setDarkMode, style, setStyle }) => {
   const { currentUser } = useSelector((state) => state.user);
-  const [style, setStyle] = useState("open");
   var path = useLocation().pathname.split("/")[1];
   const [subscriptions, setSubscriptions] = useState([]);
   var x = window.matchMedia("(max-width: 800px)");
@@ -293,14 +292,19 @@ const Menu = ({ darkMode, setDarkMode }) => {
   });
 
   useEffect(() => {
-    if (path === "video" || path === "settings" || path === "signin" || x.matches) {
+    if (
+      path === "video" ||
+      path === "settings" ||
+      path === "signin" ||
+      x.matches
+    ) {
       setStyle("closed2");
     } else if (x2.matches) {
       setStyle("closed");
     } else {
       setStyle("open");
     }
-  },[path, x.matches, x2.matches])
+  }, [path, x.matches, x2.matches]);
 
   function myFunction(x, x2) {
     if (path === "") {
@@ -449,7 +453,6 @@ const Menu = ({ darkMode, setDarkMode }) => {
             </>
           ) : (
             <>
-           
               <Title className={style}>Subscriptions</Title>
               {subscriptions.length !== 0 ? (
                 <>
@@ -515,21 +518,24 @@ const Menu = ({ darkMode, setDarkMode }) => {
               <Title2 className={style}>News</Title2>
             </Item2>
           </Link>
-          <Link to="Cooking" style={{ textDecoration: "none", color: "inherit" }}>
-          <Item2 className={style}>
-            <LocalPizzaIcon />
-            <Title2 className={style}>Cooking</Title2>
-          </Item2>
+          <Link
+            to="Cooking"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Item2 className={style}>
+              <LocalPizzaIcon />
+              <Title2 className={style}>Cooking</Title2>
+            </Item2>
           </Link>
           <Hr className={style} />
           <Link
-                to="settings"
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-          <Item2 className={style}>
-            <SettingsOutlinedIcon />
-            <Title2 className={style}>Settings</Title2>
-          </Item2>
+            to="settings"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Item2 className={style}>
+              <SettingsOutlinedIcon />
+              <Title2 className={style}>Settings</Title2>
+            </Item2>
           </Link>
           <Item2 className={style}>
             <FlagOutlinedIcon />

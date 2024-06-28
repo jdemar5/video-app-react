@@ -105,15 +105,88 @@ const Tag = styled.button`
       background-color: ${({ theme }) => theme.softer};
     }
   }
+  &.load {
+    color: ${({ theme }) => theme.soft};
+  }
 `;
 
-const Recommendation = ({ currentUser, channel, tags }) => {
+const LoadDiv = styled.div`
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+
+  &.true {
+    display: flex;
+  }
+`;
+
+const Loader = styled.div`
+  margin-top: 30px;
+  border: 8px solid ${({ theme }) => theme.soft};
+  border-radius: 50%;
+  border-top: 8px solid ${({ theme }) => theme.softer};
+  width: 60px;
+  height: 60px;
+  align-self: center;
+  -webkit-animation: spin 2s infinite;
+  animation: spin 2s infinite;
+
+  &:before,
+  &:after {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    position: absolute;
+    left: 0.125rem;
+  }
+
+  &:before {
+    top: 0.063rem;
+  }
+
+  &:after {
+    bottom: 0.063rem;
+  }
+
+  @keyframes spin {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const RecDiv = styled.div`
+  &.true {
+    display: none;
+  }
+`;
+
+const Recommendation = ({ currentUser, channel, tags, isLoading }) => {
   const [videos, setVideos] = useState([]);
   const [tagsMenu, setTagsMenu] = useState([]);
   const [selectedTag, setSelectedTag] = useState({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [buttonsInactive, setButtonsInactive] = useState("BackInactive");
-  const Default = ["Sports", "News", "Gaming", "Music", "Movies", "Fashion", "Cooking", "Art", "Beauty", "Vlogs", "Modeling", "Cars", "Racing", "TV", "History", "Animals"]
+  const Default = [
+    "Sports",
+    "News",
+    "Gaming",
+    "Music",
+    "Movies",
+    "Fashion",
+    "Cooking",
+    "Art",
+    "Beauty",
+    "Vlogs",
+    "Modeling",
+    "Cars",
+    "Racing",
+    "TV",
+    "History",
+    "Animals",
+  ];
 
   var res;
 
@@ -139,10 +212,10 @@ const Recommendation = ({ currentUser, channel, tags }) => {
     setSelectedTag(e);
     switch (e) {
       case "All":
-        if(currentUser){
+        if (currentUser) {
           res = await axios.get(`/videos/tags?tags=${currentUser.pTags}`);
-        setVideos(res.data);
-        } else{
+          setVideos(res.data);
+        } else {
           res = await axios.get(`/videos/tags?tags=${Default}`);
           setVideos(res.data);
         }
@@ -156,24 +229,32 @@ const Recommendation = ({ currentUser, channel, tags }) => {
         setVideos(res.data);
         break;
       case "For You":
-        if(currentUser){
-          const HistRes = (await axios.get(`/videos/history?history=${currentUser._id}`)).data;
+        if (currentUser) {
+          const HistRes = (
+            await axios.get(`/videos/history?history=${currentUser._id}`)
+          ).data;
           res = await axios.get(`/videos/tags?tags=${currentUser.pTags}`);
-          const UnwatchedRes = res.data.filter(a => !HistRes.some(b => a._id === b._id));
-          setVideos(UnwatchedRes)
-        } else{
+          const UnwatchedRes = res.data.filter(
+            (a) => !HistRes.some((b) => a._id === b._id)
+          );
+          setVideos(UnwatchedRes);
+        } else {
           res = await axios.get(`/videos/tags?tags=${Default}`);
           setVideos(res.data);
         }
         break;
       case "Recently Uploaded":
-        if(currentUser){
+        if (currentUser) {
           res = await axios.get(`/videos/tags?tags=${currentUser.pTags}`);
-          res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          setVideos(res.data)
-        } else{
+          res.data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setVideos(res.data);
+        } else {
           res = await axios.get(`/videos/tags?tags=${Default}`);
-          res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          res.data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
           setVideos(res.data);
         }
         break;
@@ -185,7 +266,7 @@ const Recommendation = ({ currentUser, channel, tags }) => {
   };
 
   useEffect(() => {
-      fetchVideos("All");
+    fetchVideos("All");
   }, [currentUser]);
 
   useEffect(() => {
@@ -205,13 +286,19 @@ const Recommendation = ({ currentUser, channel, tags }) => {
     </TagDiv>
   ));
 
+  const loadingItems = tagsMenu.map((tag) => (
+    <TagDiv>
+      <Tag className="load">......</Tag>
+    </TagDiv>
+  ));
+
   return (
     <Container>
       <AliceCarousel
         disableDotsControls
         autoWidth
         mouseTracking
-        items={items}
+        items={isLoading ? loadingItems : items}
         renderPrevButton={() => {
           return (
             <BackButtonDiv onClick={slidePrev} className={buttonsInactive}>
@@ -231,9 +318,14 @@ const Recommendation = ({ currentUser, channel, tags }) => {
           );
         }}
       />
-      {videos.map((video) => (
-        <LongCard type="sm" key={video._id} video={video} />
-      ))}
+      <LoadDiv className={isLoading}>
+        <Loader />
+      </LoadDiv>
+      <RecDiv className={isLoading}>
+        {videos.map((video) => (
+          <LongCard type="sm" key={video._id} video={video} />
+        ))}
+      </RecDiv>
     </Container>
   );
 };

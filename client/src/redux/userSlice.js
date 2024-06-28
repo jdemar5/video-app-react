@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+
 const initialState ={
     currentUser: null,
     loading:false,
@@ -44,6 +45,11 @@ export const userSlice = createSlice({
         addTags: (state,action) => {
             state.currentUser.pTags.push(action.payload);
         },
+        removeTags: (state,action) => {
+            state.currentUser.pTags.splice(
+                state.currentUser.pTags.findIndex(
+                    (tags) => tags === action.payload),1);
+        },
         updateImg: (state,action) => {
             state.currentUser.img = action.payload;
         },
@@ -56,5 +62,5 @@ export const userSlice = createSlice({
     },
 })
 
-export const {loginStart, loginSuccess, loginFailure, logout, subscription, history, watchLater, addTags, updateImg, updateBanner, updateAbout} = userSlice.actions
+export const {loginStart, loginSuccess, loginFailure, logout, subscription, history, watchLater, addTags, removeTags, updateImg, updateBanner, updateAbout} = userSlice.actions
 export default userSlice.reducer;

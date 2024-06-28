@@ -114,3 +114,14 @@ export const addTags = async (req,res,next)=>{
         next(error)
     }
 };
+
+export const removeTags = async (req,res,next)=>{
+    const userId = req.user.id;
+    const tags = req.params.tags.split(",");
+    try{
+        await User.findByIdAndUpdate(userId, { $pull: {pTags:tags}})
+        res.status(200).json("Tags are now removed")
+    }catch(error){
+        next(error)
+    }
+};

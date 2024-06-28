@@ -35,7 +35,16 @@ const Content = styled.div`
   width: 110%;
 `;
 const VideoWrapper = styled.div`
-  border-radius: 50px;
+  background-color: black;
+  height: 73.4vh;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+
+  &.true {
+    display: none;
+  }
 `;
 
 const Title = styled.h1`
@@ -91,8 +100,10 @@ const Image = styled.img`
 `;
 
 const ChannelDetail = styled.div`
+  width: 100vh;
   display: flex;
   flex-direction: column;
+  gap: 5px;
   color: ${({ theme }) => theme.text};
 `;
 
@@ -109,6 +120,7 @@ const ChannelCounter = styled.span`
 
 const Description = styled.p`
   font-size: 14px;
+  line-height: 20px;
 `;
 
 const Subscribe = styled.button`
@@ -143,13 +155,167 @@ const YourChannel = styled.button`
   }
 `;
 
-const Video = () => {
+const LoadDiv = styled.div`
+  background-color: black;
+  height: 73.4vh;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+
+  display: none;
+  &.true {
+    display: flex;
+  }
+`;
+
+const Loader = styled.div`
+  border: 8px solid ${({ theme }) => theme.soft};
+  border-radius: 50%;
+  border-top: 8px solid ${({ theme }) => theme.softer};
+  width: 60px;
+  height: 60px;
+  align-self: center;
+  -webkit-animation: spin 2s infinite;
+  animation: spin 2s infinite;
+
+  &:before,
+  &:after {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    position: absolute;
+    left: 0.125rem;
+  }
+
+  &:before {
+    top: 0.063rem;
+  }
+
+  &:after {
+    bottom: 0.063rem;
+  }
+
+  @keyframes spin {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const LoaderText = styled.h1`
+  white-space: pre;
+  width: max-content;
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  color: ${({ theme }) => theme.soft};
+  border-radius: 5px;
+`;
+
+const LoaderText2 = styled.span`
+  white-space: pre;
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  color: ${({ theme }) => theme.soft};
+  border-radius: 5px;
+  width: max-content;
+`;
+
+const LoaderText3 = styled.p`
+  white-space: pre;
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  color: ${({ theme }) => theme.soft};
+  border-radius: 5px;
+  width: max-content;
+  font-size: 14px;
+`;
+
+const LoaderIcon = styled.div`
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  border-radius: 50%;
+`;
+
+const LoadSubscribe = styled.button`
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  font-weight: 500;
+  color: ${({ theme }) => theme.soft};
+  border: none;
+  border-radius: 3px;
+  height: max-content;
+  padding: 10px 20px;
+`;
+
+const Video = (style) => {
   const { currentUser } = useSelector((state) => state.user);
   const { currentVideo } = useSelector((state) => state.video);
   const videoPlayerRef = useRef(null);
   const dispatch = useDispatch();
   const path = useLocation().pathname.split("/")[2];
   const [channel, setChannel] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const [duration, setDuration] = useState(0);
   const [viewed, setViewed] = useState(false);
   const [openS, setOpenS] = useState(false);
@@ -166,9 +332,13 @@ const Video = () => {
       } catch (error) {
         dispatch(fetchFailure());
       }
+
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
     };
     fetchData();
-  }, [path, dispatch]);
+  }, [path]);
 
   const handleLike = async () => {
     await axios.put(`/users/like/${currentVideo._id}`);
@@ -212,12 +382,12 @@ const Video = () => {
           await axios.put(`/users/watch/${e._id}`);
           dispatch(history(e._id));
           let difference = e.tags.filter((x) => !currentUser.pTags.includes(x));
-        if (difference.length !== 0) {
-          await axios.put(`/users/addTags/${difference}`);
-          difference.forEach((tag) => {
-            dispatch(addTags(tag));
-          });
-        }
+          if (difference.length !== 0) {
+            await axios.put(`/users/addTags/${difference}`);
+            difference.forEach((tag) => {
+              dispatch(addTags(tag));
+            });
+          }
         }
       }
     };
@@ -228,7 +398,10 @@ const Video = () => {
     <>
       <Container>
         <Content>
-          <VideoWrapper>
+          <LoadDiv className={isLoading}>
+            <Loader />
+          </LoadDiv>
+          <VideoWrapper className={isLoading}>
             <ReactPlayer
               onProgress={(progress) => {
                 if (progress.playedSeconds >= duration / 2) {
@@ -244,112 +417,176 @@ const Video = () => {
               url={currentVideo.videoUrl}
               width="100%"
               height="100%"
-              playing={true}
+              playing={!isLoading}
               controls
+              style={{ borderRadius: "20px", overflow: "hidden" }}
             />
           </VideoWrapper>
-          <Title>{currentVideo.title}</Title>
+          {isLoading ? (
+            <LoaderText style={{marginTop: "20px", marginBottom: "10px", fontSize: "18px", fontWeight: 400}}>                              </LoaderText>
+          ) : (
+            <Title>{currentVideo.title}</Title>
+          )}
           <Details>
-            <Info>
-              {currentVideo.views} views • {format(currentVideo.createdAt)}
-            </Info>
-            <Buttons>
-              {currentUser ? (
-                <Button onClick={handleLike}>
-                  {currentVideo.likes?.includes(currentUser._id) ? (
-                    <ThumbUpIcon />
+            {isLoading ? (
+              <>
+                <LoaderText2>                                              </LoaderText2>
+                <Buttons>
+                  <LoaderIcon
+                    style={{
+                      width: "25px",
+                      height: "25px",
+                      marginRight: "27px",
+                    }}
+                  />
+                  <LoaderIcon
+                    style={{
+                      width: "25px",
+                      height: "25px",
+                      marginRight: "27px",
+                    }}
+                  />
+                  <LoaderIcon
+                    style={{
+                      width: "25px",
+                      height: "25px",
+                      marginRight: "27px",
+                    }}
+                  />
+                  <LoaderIcon
+                    style={{
+                      width: "25px",
+                      height: "25px",
+                      marginRight: "27px",
+                    }}
+                  />
+                </Buttons>
+              </>
+            ) : (
+              <>
+                <Info>
+                  {currentVideo.views} views • {format(currentVideo.createdAt)}
+                </Info>
+                <Buttons>
+                  {currentUser ? (
+                    <Button onClick={handleLike}>
+                      {currentVideo.likes?.includes(currentUser._id) ? (
+                        <ThumbUpIcon />
+                      ) : (
+                        <ThumbUpOutlinedIcon />
+                      )}
+                    </Button>
                   ) : (
                     <ThumbUpOutlinedIcon />
-                  )}
-                </Button>
-              ) : (
-                <ThumbUpOutlinedIcon />
-              )}{" "}
-              {currentVideo.likes?.length}
-              {currentUser ? (
-                <Button onClick={handleDislike}>
-                  {currentVideo.dislikes?.includes(currentUser._id) ? (
-                    <ThumbDownIcon />
+                  )}{" "}
+                  {currentVideo.likes?.length}
+                  {currentUser ? (
+                    <Button onClick={handleDislike}>
+                      {currentVideo.dislikes?.includes(currentUser._id) ? (
+                        <ThumbDownIcon />
+                      ) : (
+                        <ThumbDownOffAltOutlinedIcon />
+                      )}{" "}
+                    </Button>
                   ) : (
                     <ThumbDownOffAltOutlinedIcon />
-                  )}{" "}
-                </Button>
-              ) : (
-                <ThumbDownOffAltOutlinedIcon />
-              )}
-              <Button
-                onClick={() => setOpenS(!openS)}
-                style={{ cursor: "pointer" }}
-              >
-                <ReplyOutlinedIcon /> Share
-              </Button>
-              <Button onClick={handleDownload}>
-                <AddTaskOutlinedIcon /> Save
-              </Button>
-            </Buttons>
+                  )}
+                  <Button
+                    onClick={() => setOpenS(!openS)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <ReplyOutlinedIcon /> Share
+                  </Button>
+                  <Button onClick={handleDownload}>
+                    <AddTaskOutlinedIcon /> Save
+                  </Button>
+                </Buttons>
+              </>
+            )}
           </Details>
           <Hr />
-          <Channel>
-            <ChannelInfo>
-              {currentUser ? (
-                <>
-                  <Link
-                to={`/channel/${channel._id}`}
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <Image src={channel.img} />
-              </Link>
-              <ChannelDetail>
+          {isLoading ? (
+            <Channel>
+              <ChannelInfo>
+                <LoaderIcon style={{ width: "50px", height: "50px" }} />
+                <ChannelDetail>
+                      <LoaderText style={{ fontSize: "18px"}}>                </LoaderText>
+                    <LoaderText2 style={{marginTop: "5px", marginBottom: "20px", fontSize: "12px"}}>                     </LoaderText2>
+                    <LoaderText3  style={{ width: "100%"}}>                                                                                </LoaderText3>
+                    <LoaderText3 style={{ width: "70%"}}>                                                         </LoaderText3>
+                  </ChannelDetail>
+              </ChannelInfo>
+              {currentUser && currentUser._id === channel._id ? (
                 <Link
                   to={`/channel/${channel._id}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
-                  <ChannelName>{channel.name}</ChannelName>
+                  <YourChannel>Your Channel</YourChannel>
                 </Link>
-                <ChannelCounter>
-                  {channel.subscribers} subscribers
-                </ChannelCounter>
-                <Description>{currentVideo.desc}</Description>
-              </ChannelDetail>
-                </>
               ) : (
-                <>
-                  <Image src={channel.img} />
-                  <ChannelDetail>
-                  <ChannelName>{channel.name}</ChannelName>
-                <ChannelCounter>
-                  {channel.subscribers} subscribers
-                </ChannelCounter>
-                <Description>{currentVideo.desc}</Description>
-              </ChannelDetail>
-                </>
+                currentUser && <LoadSubscribe>SUBSCRIBE</LoadSubscribe>
               )}
-            </ChannelInfo>
-            {currentUser && currentUser._id === channel._id ? (
-              <Link
-                to={`/channel/${channel._id}`}
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <YourChannel>Your Channel</YourChannel>
-              </Link>
-            ) : (
-              currentUser && (
+            </Channel>
+          ) : (
+            <Channel>
+              <ChannelInfo>
+                <Link
+                  to={`/channel/${channel._id}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <Image src={channel.img} />
+                </Link>
+                <ChannelDetail>
+                  <Link
+                    to={`/channel/${channel._id}`}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <ChannelName>{channel.name}</ChannelName>
+                  </Link>
+                  <ChannelCounter>
+                    {channel.subscribers} subscribers
+                  </ChannelCounter>
+                  <Description>{currentVideo.desc}</Description>
+                </ChannelDetail>
+              </ChannelInfo>
+              {currentUser && currentUser._id === channel._id ? (
+                <Link
+                  to={`/channel/${channel._id}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <YourChannel>Your Channel</YourChannel>
+                </Link>
+              ) : currentUser ? (
                 <Subscribe onClick={handleSub}>
                   {currentUser.subscribedUsers?.includes(channel._id)
                     ? "SUBSCRIBED"
                     : "SUBSCRIBE"}
                 </Subscribe>
-              )
-            )}
-          </Channel>
+              ) : (
+                <>
+                  <Link to="/signin" style={{ textDecoration: "none" }}>
+                    <Subscribe onClick={handleSub} className={isLoading}>
+                      SUBSCRIBE
+                    </Subscribe>
+                  </Link>
+                </>
+              )}
+            </Channel>
+          )}
+
           <Hr />
-          <Comments videoId={currentVideo._id} />
+          <Comments
+            videoId={currentVideo._id}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+          />
         </Content>
 
         <Recommendation
           currentUser={currentUser}
           channel={channel}
           tags={currentVideo.tags}
+          isLoading={isLoading}
         />
       </Container>
       {openS && <ShareMenu setOpenS={setOpenS} video={currentVideo} />}

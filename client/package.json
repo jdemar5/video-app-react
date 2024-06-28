@@ -14,7 +14,7 @@
     "axios": "^1.4.0",
     "firebase": "^10.2.0",
     "react": "^18.0.0",
-    "react-alice-carousel": "^2.8.0",
+    "react-alice-carousel": "^2.9.1",
     "react-avatar-editor": "^13.0.2",
     "react-dom": "^18.0.0",
     "react-image-file-resizer": "^0.4.8",

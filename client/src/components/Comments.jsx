@@ -14,8 +14,8 @@ const NewComment = styled.div`
 `;
 
 const Avatar = styled.img`
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
 `;
 
@@ -30,6 +30,7 @@ const Input = styled.input`
 `;
 
 const Text = styled.span`
+  margin-top: 20px;
   font-size: 14px;
   color: ${({ theme }) => theme.text};
 `;
@@ -70,31 +71,75 @@ const CancelButton = styled.button`
   }
 `;
 
-const Comments = ({ videoId }) => {
+const LoaderIcon = styled.div`
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  border-radius: 50%;
+`;
+
+const LoaderText = styled.h1`
+white-space: pre;
+  margin-top: 20px;
+  font-size: 14px;
+  width: max-content;
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  color: ${({ theme }) => theme.soft};
+  border-radius: 5px;
+`;
+
+const Comments = ({ videoId, isLoading, setIsLoading }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [input, setInput] = useState("");
   const [vis, setVis] = useState("false");
   const [comments, setComments] = useState([]);
-  
+
   useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const res = await axios.get(`/comments/${videoId}`);
-        setComments(res.data);
-      } catch (err) {}
-    };
     fetchComments();
   }, [videoId]);
 
-  const addComment = async () => {
+  const fetchComments = async () => {
     try {
-      await axios.post("/comments", {input, videoId});
+      const res = await axios.get(`/comments/${videoId}`);
+      setComments(res.data);
     } catch (err) {}
-    setVis("false")
   };
 
-  const handleChange =(e)=>{
-    setInput(e.target.value)
+  const addComment = async () => {
+    try {
+      await axios.post("/comments", { input, videoId });
+    } catch (err) {}
+    setVis("false");
+    fetchComments();
+    setInput("");
+  };
+
+  const handleChange = (e) => {
+    setInput(e.target.value);
   };
 
   //TODO: ADD NEW COMMENT FUNCTIONALITY
@@ -102,23 +147,39 @@ const Comments = ({ videoId }) => {
   return (
     <Container>
       <NewComment>
-        {currentUser ? (
-          <Avatar src={currentUser.img} />
+        {isLoading ? (
+          <>
+            <LoaderIcon style={{ width: "40px", height: "40px" }} />
+            <LoaderText style={{ marginBottom: "15px" }}>                                                 </LoaderText>
+          </>
+        ) : currentUser ? (
+          <>
+            <Avatar src={currentUser.img} />
+            <Input
+              onClick={() => setVis("true")}
+              onChange={handleChange}
+              placeholder="Add a comment..."
+              value={input}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addComment();
+              }}
+            />
+            <CancelButton className={vis} onClick={() => setVis("false")}>
+              Cancel
+            </CancelButton>
+            <SetButton className={vis} onClick={addComment}>
+              Comment
+            </SetButton>
+          </>
         ) : (
-          <Avatar src={DefPFP} />
-        )}
-        {currentUser ? (
-        <>
-        <Input onClick={()=>setVis("true")} onChange={handleChange} placeholder="Add a comment..." />
-        <CancelButton className={vis} onClick={()=>setVis("false")}>Cancel</CancelButton>
-        <SetButton className={vis} onClick={addComment}>Comment</SetButton>
-        </>
-        ) : (
-          <Text>sign in to leave a comment.</Text>
+          <>
+            <Avatar src={DefPFP} />
+            <Text>sign in to leave a comment.</Text>
+          </>
         )}
       </NewComment>
       {comments.map((comment) => (
-        <Comment key={comment._id} comment={comment} />
+        <Comment key={comment._id} comment={comment} isLoading={isLoading} />
       ))}
     </Container>
   );

@@ -10,17 +10,20 @@ import ReplyOutlinedIcon from "@mui/icons-material/ReplyOutlined";
 import DoNotDisturbAltIcon from "@mui/icons-material/DoNotDisturbAlt";
 import CheckIcon from "@mui/icons-material/Check";
 import { useDispatch, useSelector } from "react-redux";
-import { watchLater } from "../redux/userSlice";
+import { removeTags, watchLater } from "../redux/userSlice";
 import ShareMenu from "./ShareMenu";
 import ReactPlayer from "react-player/lazy";
 
 const Image = styled.img`
-  transition-delay: 250ms;
   border-radius: 12px;
   width: 100%;
-  height: auto;
-  background-color: #999;
+  aspect-ratio: 33/18.6;
+  color: #999;
   z-index: 999;
+
+  &.true {
+    display: none;
+  }
 `;
 
 const Duration = styled.h2`
@@ -34,12 +37,20 @@ const Duration = styled.h2`
   color: white;
   font-size: 14px;
   background-color: #000000a7;
+
+  &.true {
+    visibility: hidden;
+  }
 `;
 
 const VidDiv = styled.div`
   transition-delay: 250ms;
   display: none;
   width: 100%;
+
+  &.true {
+    display: block;
+  }
 `;
 
 const Container = styled.div`
@@ -63,17 +74,6 @@ const Container = styled.div`
   @media only screen and (max-width: 650px) {
     width: 90%;
   }
-
-  &:hover ${Image} {
-    border-radius: 0px;
-    display: none;
-  }
-  &:hover ${Duration} {
-    visibility: hidden;
-  }
-  &:hover ${VidDiv} {
-    display: block;
-  }
 `;
 
 const Details = styled.div`
@@ -93,19 +93,21 @@ const ChannelImage = styled.img`
   display: ${(props) => props.type === "sm" && "none"};
 `;
 
-const Texts = styled.div``;
+const Texts = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+`;
 
 const Title = styled.h1`
   font-size: 16px;
   font-weight: 500;
   color: ${({ theme }) => theme.text};
-  margin: 0px 0px 7px 0px;
 `;
 
 const ChannelName = styled.h2`
   font-size: 14px;
   color: ${({ theme }) => theme.textSoft};
-  margin: 2px 0px;
 `;
 
 const Info = styled.div`
@@ -133,28 +135,29 @@ const DropDownContent = styled.div`
 `;
 
 const DropDownLi = styled.li`
+position: relative;
   ${(props) => {
     if (
       props.mode.x >= window.innerWidth - window.innerWidth / 6 &&
       props.mode.y >= window.innerHeight - window.innerHeight / 4
     ) {
       return `
-      float: left;
-      padding-left: 40px;
-      margin-top: -240px;
+      right: 260px;
       `;
     } else if (props.mode.x >= window.innerWidth - window.innerWidth / 6) {
       return `
-      float: left;
-      padding-left: 40px;
+      top: 240px;
+      right: 260px;
       `;
     } else if (props.mode.y >= window.innerHeight - window.innerHeight / 4) {
       return `
-      float: right;
-      margin-top: -240px;
+      right: 40px;
       `;
     } else {
-      return `float: right;`;
+      return `
+      top: 240px;
+      right: 40px;
+      `;
     }
   }}
   display: flex;
@@ -166,7 +169,7 @@ const DropDownLi = styled.li`
   }
 `;
 
-const Item = styled.a`
+const Item = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
@@ -190,11 +193,86 @@ const Hr = styled.hr`
   border: 0.5px solid ${({ theme }) => theme.softer};
 `;
 
-const Card = ({ type, video }) => {
+const LoaderIcon = styled.div`
+  border-radius: 50%;
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+`;
+
+const LoaderImage = styled.div`
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  border-radius: 12px;
+  width: 100%;
+  color: #999;
+  z-index: 999;
+  aspect-ratio: 33/18.6;
+`;
+
+const LoaderDiv = styled.div`
+  display: none;
+  &.true {
+    display: block;
+  }
+`;
+
+const ThumbDiv = styled.div`
+  display: block;
+  &.true {
+    display: none;
+  }
+`;
+
+const LoaderText = styled.h1`
+  white-space: pre;
+  width: max-content;
+  background: linear-gradient(
+    -45deg,
+    ${({ theme }) => theme.soft} 40%,
+    ${({ theme }) => theme.softer} 50%,
+    ${({ theme }) => theme.soft} 60%
+  );
+  background-size: 300%;
+  background-position-x: 100%;
+  animation: shimmer 1s infinite linear;
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+  color: ${({ theme }) => theme.soft};
+  border-radius: 5px;
+`;
+
+const Card = ({ video, isLoading }) => {
   const dispatch = useDispatch();
   const [channel, setChannel] = useState({});
   const [openD, setOpenD] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [over, setOver] = useState(false);
   const [openS, setOpenS] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
   const [mousePos, setMousePos] = useState({});
@@ -276,11 +354,19 @@ const Card = ({ type, video }) => {
   };
 
   const onMouseOverCaptureHandler = () => {
-    setPlaying(true);
+    let handle = 0;
+    handle = setTimeout(() => {
+      setOver(true);
+    }, 500);
+    document.getElementById(`container${video._id}`).onmouseout = function () {
+      clearTimeout(handle);
+    };
   };
 
   const onMouseOutCaptureHandler = () => {
-    setPlaying(false);
+    setTimeout(() => {
+      setOver(false);
+    }, 500);
   };
 
   const handleStart = () => {
@@ -290,46 +376,85 @@ const Card = ({ type, video }) => {
     }, 10000);
   };
 
+  const notInterested = async () => {
+    let similar = video.tags.filter((x) => currentUser.pTags.includes(x));
+    console.log(currentUser.pTags)
+    console.log(video.tags)
+    console.log(similar)
+    // await axios.put(`/users/removeTags/${similar}`);
+    //         similar.forEach((tag) => {
+    //           dispatch(removeTags(tag));
+    //         });
+  }
+
   return (
     <>
       <Container
-        onMouseOverCapture={onMouseOverCaptureHandler}
-        onMouseOutCapture={onMouseOutCaptureHandler}
-        type={type}
+        id={`container${video._id}`}
+        onMouseOver={onMouseOverCaptureHandler}
+        onMouseOut={onMouseOutCaptureHandler}
       >
         <Link to={`/video/${video._id}`} style={{ textDecoration: "none" }}>
-          <VidDiv>
-            <ReactPlayer
-              ref={videoPlayerRef}
-              url={video.videoUrl}
-              width="100%"
-              height="70%"
-              muted
-              style={{ position: "relative" }}
-              playing={playing}
-              loop
-              onStart={handleStart}
-            />
-          </VidDiv>
-          <Image type={type} src={video.imgUrl} />
-          <Duration>{video.duration}</Duration>
-
-          <Details type={type}>
-            <ChannelImage type={type} src={channel.img} />
-
-            <Texts>
-              <Title>{video.title}</Title>
-              <ChannelName>{channel.name}</ChannelName>
-              <Info>
-                {video.views} views • {format(video.createdAt)}
-              </Info>
-            </Texts>
+          {isLoading ? (
+            <>
+              <LoaderDiv className={isLoading}>
+                <LoaderImage></LoaderImage>
+                <Duration style={{ visibility: "hidden" }}>
+                  {video.duration}
+                </Duration>
+              </LoaderDiv>
+            </>
+          ) : (
+            <>
+              <ThumbDiv className={isLoading}>
+                <VidDiv className={over}>
+                  <ReactPlayer
+                    ref={videoPlayerRef}
+                    url={video.videoUrl}
+                    width="100%"
+                    height="70%"
+                    muted
+                    style={{ position: "relative" }}
+                    playing={over}
+                    loop
+                    onStart={handleStart}
+                  />
+                </VidDiv>
+                <Image className={over} src={video.imgUrl} />
+                <Duration className={over}>{video.duration}</Duration>
+              </ThumbDiv>
+            </>
+          )}
+          <Details>
+            {isLoading ? (
+              <>
+                <LoaderIcon style={{ width: "36px", height: "36px" }} />
+                <Texts>
+                <LoaderText style={{fontSize: "16px"}}>                                     </LoaderText>
+                <LoaderText style={{ fontSize: "14px"}} >                         </LoaderText>
+                <LoaderText style={{ fontSize: "14px"}}>                                                </LoaderText>
+              </Texts>
+              </>
+            ) : (
+              <>
+                <ChannelImage src={channel.img} />
+                <Texts>
+                  <Title>{video.title}</Title>
+                  <ChannelName>{channel.name}</ChannelName>
+                  <Info>
+                    {video.views} views • {format(video.createdAt)}
+                  </Info>
+                </Texts>
+              </>
+            )}
           </Details>
         </Link>
         <Dots onClick={handleOpenDots}>
           <MoreVertRounded />
         </Dots>
-        <DropDownLi mode={mouseSave} ref={menuRef} className={openD}>
+        
+      </Container>
+      <DropDownLi mode={mouseSave} ref={menuRef} className={openD}>
           <DropDownContent>
             {" "}
             {currentUser ? (
@@ -342,12 +467,15 @@ const Card = ({ type, video }) => {
               </>
             ) : (
               <>
-              <Link to="signin" style={{ textDecoration: "none", color: "inherit" }}>
-              <Item>
-                  <SheduleOutlined />
-                  <TitleDD>Save to Watch later</TitleDD>
-                  <CheckIcon style={{ display: checkView }} />
-                </Item>
+                <Link
+                  to="signin"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <Item>
+                    <SheduleOutlined />
+                    <TitleDD>Save to Watch later</TitleDD>
+                    <CheckIcon style={{ display: checkView }} />
+                  </Item>
                 </Link>
               </>
             )}
@@ -363,13 +491,14 @@ const Card = ({ type, video }) => {
               <TitleDD>Share</TitleDD>
             </Item>
             <Hr />
-            <Item>
+            <Item onClick={notInterested}
+              style={{ cursor: "pointer" }}
+              >
               <DoNotDisturbAltIcon />
               <TitleDD>Not Interested</TitleDD>
             </Item>
           </DropDownContent>
         </DropDownLi>
-      </Container>
       {openS && <ShareMenu setOpenS={setOpenS} video={video} />}
     </>
   );

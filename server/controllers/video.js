@@ -106,7 +106,7 @@ export const sub = async (req,res,next)=>{
 export const getByTag = async (req,res,next)=>{
     const tags = req.query.tags.split(",");
     try{
-        const videos = await Video.find({tags: { $in: tags }}).limit(20);
+        const videos = await Video.find({tags: { $in: tags }}).limit(40);
         res.status(200).json(videos);
     }catch(err){
         next(err);
@@ -116,7 +116,7 @@ export const getByTag = async (req,res,next)=>{
 export const getByLike = async (req,res,next)=>{
     const like = req.query.like;
     try{
-        const videos = await Video.find({likes: { $in: like }}).limit(20);
+        const videos = await Video.find({likes: { $in: like }}).limit(40);
         res.status(200).json(videos);
     }catch(err){
         next(err);
@@ -126,7 +126,7 @@ export const getByLike = async (req,res,next)=>{
 export const getByAuth = async (req,res,next)=>{
     const auth = req.query.auth;
     try{
-        const videos = await Video.find({userId: auth}).limit(20);
+        const videos = await Video.find({userId: auth}).limit(40);
         res.status(200).json(videos);
     }catch(err){
         next(err);
@@ -136,7 +136,7 @@ export const getByAuth = async (req,res,next)=>{
 export const getAuthPop = async (req,res,next)=>{
     const auth = req.query.auth;
     try{
-        const videos = await Video.find({userId: auth}).sort ({ views:-1 }).limit(20);
+        const videos = await Video.find({userId: auth}).sort ({ views:-1 }).limit(40);
         res.status(200).json(videos);
     }catch(err){
         next(err);
@@ -146,7 +146,7 @@ export const getAuthPop = async (req,res,next)=>{
 export const getAuthLatest = async (req,res,next)=>{
     const auth = req.query.auth;
     try{
-        const videos = await Video.find({userId: auth}).limit(20);
+        const videos = await Video.find({userId: auth}).limit(40);
         res.status(200).json(videos.sort((a, b) => b.createdAt - a.createdAt));
     }catch(err){
         next(err);
@@ -156,7 +156,7 @@ export const getAuthLatest = async (req,res,next)=>{
 export const getAuthOldest = async (req,res,next)=>{
     const auth = req.query.auth;
     try{
-        const videos = await Video.find({userId: auth}).limit(20);
+        const videos = await Video.find({userId: auth}).limit(40);
         res.status(200).json(videos.sort((a, b) => a.createdAt - b.createdAt));
     }catch(err){
         next(err);
@@ -196,7 +196,9 @@ export const getByWL = async (req,res,next)=>{
 export const search = async (req,res,next)=>{
     const query = req.query.q
     try{
-        const videos = await Video.find({title: {$regex: query, $options: "i" }}).limit(40);
+        const tagVideos = await Video.find({tags: {$regex: query, $options: "i" }}).limit(40);
+        const titleVideos = await Video.find({title: {$regex: query, $options: "i" }}).limit(40);
+        const videos = titleVideos.concat(tagVideos);
         res.status(200).json(videos);
     }catch(err){
         next(err);

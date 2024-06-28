@@ -150,6 +150,11 @@ const Upload = ({ setOpen }) => {
   const navigate = useNavigate();
   const storage = getStorage(app);
 
+  window.onbeforeunload = function(event)
+  {
+      return (inputs.imgUrl && deleteFile(inputs.imgUrl), inputs.videoUrl && deleteFile(inputs.videoUrl));
+  };
+
   const onScrollUp = () => {
     if (currentRange < 3) {
       setCurrentRange(currentRange + 0.1);

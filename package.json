@@ -1,5 +1,1 @@
-{
-  "devDependencies": {
-    "gh-pages": "^6.1.1"
-  }
-}
+{"scripts":{"start":"concurrently \"cd server && yarn start\" \"cd client && yarn start\""},"devDependencies":{"gh-pages":"^6.1.1"},"dependencies":{"concurrently":"^8.2.2"}}
